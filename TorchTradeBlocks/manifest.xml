@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<PluginManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <Name>Trade Blocks</Name>
+
+  <Guid>B2130F51-67E7-4689-8AC0-43A773D094E1</Guid>
+
+  <Repository>https://github.com/HnZGaming/TorchTradeBlocks</Repository>
+
+  <Version>v1.0.0.0</Version>
+
+</PluginManifest>
