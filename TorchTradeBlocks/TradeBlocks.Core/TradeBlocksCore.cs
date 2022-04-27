@@ -160,11 +160,28 @@ namespace TradeBlocks.Core
             }
 
             _allStoreItems.Clear();
-            _allStoreItems.AddRange(_localStoreItems);
-            foreach (var (_, remoteStoreItems) in _remoteStoreItems)
+            foreach (var storeItem in _localStoreItems)
             {
-                _allStoreItems.AddRange(remoteStoreItems);
+                if (Accepts(storeItem))
+                {
+                    _allStoreItems.Add(storeItem);
+                }
             }
+
+            foreach (var (_, remoteStoreItems) in _remoteStoreItems)
+            foreach (var storeItem in remoteStoreItems)
+            {
+                if (Accepts(storeItem))
+                {
+                    _allStoreItems.Add(storeItem);
+                }
+            }
+        }
+
+        bool Accepts(StoreItem storeItem)
+        {
+            if (Config.Instance.ExcludedPlayerSet.Contains(storeItem.Player)) return false;
+            return true;
         }
 
         public IReadOnlyList<StoreItem> GetStoreItems()

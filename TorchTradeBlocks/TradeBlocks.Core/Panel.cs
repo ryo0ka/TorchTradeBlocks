@@ -96,11 +96,10 @@ namespace TradeBlocks.Core
         bool Accepts(StoreItem storeItem, PanelParam param)
         {
             //Log.Info($"{param.ExcludedPlayerSet}, {param.IncludedPlayerSet}, {Config.Instance.ExcludedPlayerSet}");
-            
+
             if (param.ItemType != storeItem.Type) return false;
             if (param.IncludedPlayerSet.Count > 0 && !param.IncludedPlayerSet.Contains(storeItem.Player)) return false;
             if (param.ExcludedPlayerSet.Count > 0 && param.ExcludedPlayerSet.Contains(storeItem.Player)) return false;
-            if (Config.Instance.ExcludedPlayerSet.Contains(storeItem.Player)) return false;
             return true;
         }
 
