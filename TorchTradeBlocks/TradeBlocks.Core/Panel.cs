@@ -3,6 +3,8 @@ using System.Text;
 using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
+using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.World;
 using Sandbox.ModAPI.Ingame;
 using Utils.General;
 using VRage.Game.ObjectBuilders.Definitions;
@@ -13,32 +15,51 @@ namespace TradeBlocks.Core
     {
         static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         readonly MyTextPanel _panel;
+        PanelParam? _panelParam;
+        bool _passedFirstFrame;
 
         public Panel(MyTextPanel panel)
         {
             _panel = panel;
+            _panel.CustomDataChanged += OnCustomDataChanged;
         }
 
         public MyCubeGrid Grid => _panel.CubeGrid;
+        public PanelParam? PanelParam => _panelParam;
 
         public void Close()
         {
+            _panel.CustomDataChanged -= OnCustomDataChanged;
+        }
+
+        void OnCustomDataChanged(MyTerminalBlock _)
+        {
+            _panelParam = null;
+            if (TryParseCustomData(_panel.CustomData, out var panelParam))
+            {
+                _panelParam = panelParam;
+                Log.Debug($"custom data changed: {_panelParam}");
+            }
         }
 
         public void Update()
         {
+            if (_panel.Closed) return;
+
+            if (!_passedFirstFrame)
+            {
+                _passedFirstFrame = true;
+                OnCustomDataChanged(_panel);
+            }
+
+            if (_panelParam is not { } param) return;
             Log.Trace("panel update");
 
-            if (_panel.Closed) return;
-            if (!TryGetPanelParam(out var param)) return;
-
-            Log.Trace($"params: {param}");
-
-            var srcStoreItems = TradeBlocksCore.Instance.GetStoreItems();
-            if (srcStoreItems.Count == 0) return;
+            var allStoreItems = TradeBlocksCore.Instance.GetStoreItems();
+            if (allStoreItems.Count == 0) return;
 
             var storeItems = ListPool<StoreItem>.Get();
-            foreach (var storeItem in srcStoreItems)
+            foreach (var storeItem in allStoreItems)
             {
                 if (storeItem.Type == param.ItemType)
                 {
@@ -49,23 +70,23 @@ namespace TradeBlocks.Core
             storeItems.Sort(this);
             Log.Trace($"store items: {storeItems.ToStringSeq()}");
 
+            var storeItemsView = ListPool<StoreItem>.Get();
+            View(storeItems, storeItemsView, param.MaxLineCount);
+
+            ListPool<StoreItem>.Release(storeItems);
+
             var builder = new StringBuilder();
             builder.AppendLine($"{param.ItemType}:");
 
-            foreach (var storeItem in storeItems)
+            foreach (var storeItem in storeItemsView)
             {
                 var line = $"[{storeItem.Faction ?? "---"}] {storeItem.Player} ({storeItem.Region}): {storeItem.Item} {storeItem.Amount}x {storeItem.PricePerUnit}sc";
                 builder.AppendLine(line);
             }
 
-            ListPool<StoreItem>.Release(storeItems);
+            ListPool<StoreItem>.Release(storeItemsView);
 
             ((IMyTextSurface)_panel).WriteText(builder);
-        }
-
-        public bool TryGetPanelParam(out PanelParam panelParam)
-        {
-            return TryParseCustomData(_panel.CustomData, out panelParam);
         }
 
         int IComparer<StoreItem>.Compare(StoreItem x, StoreItem y)
@@ -87,6 +108,29 @@ namespace TradeBlocks.Core
             }
         }
 
+        static void View(IReadOnlyList<StoreItem> src, List<StoreItem> dst, int maxLineCount)
+        {
+            if (maxLineCount == 0)
+            {
+                dst.AddRange(src);
+                return;
+            }
+
+            if (src.Count <= maxLineCount)
+            {
+                dst.AddRange(src);
+                return;
+            }
+
+            var interval = MySession.Static.GameplayFrameCounter / 60;
+            //interval = src.Count - (interval % src.Count);
+            for (var i = 0; i < maxLineCount; i++)
+            {
+                var j = (i + interval) % src.Count;
+                dst.Add(src[j]);
+            }
+        }
+
         static bool TryParseCustomData(string customData, out PanelParam param)
         {
             param = default;
@@ -95,7 +139,7 @@ namespace TradeBlocks.Core
 
             var command = customData.Split(' ');
             command.TryGetElementAt(1, out var typeStr);
-            command.TryGetElementAt(2, out var panelTypeStr);
+            command.TryGetElementAt(2, out var maxLineCountStr);
 
             var itemType = typeStr switch
             {
@@ -106,14 +150,9 @@ namespace TradeBlocks.Core
                 _ => StoreItemTypes.Offer,
             };
 
-            var panelType = panelTypeStr switch
-            {
-                "normal" => PanelType.Normal,
-                "long" => PanelType.Long,
-                _ => PanelType.Normal,
-            };
+            int.TryParse(maxLineCountStr ?? "0", out var maxLineCount);
 
-            param = new PanelParam(itemType, panelType);
+            param = new PanelParam(itemType, maxLineCount);
 
             return true;
         }

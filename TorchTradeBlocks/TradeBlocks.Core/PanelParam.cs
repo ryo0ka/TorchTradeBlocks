@@ -4,18 +4,18 @@ namespace TradeBlocks.Core
 {
     public readonly struct PanelParam
     {
-        public PanelParam(StoreItemTypes itemType, PanelType panelType)
+        public PanelParam(StoreItemTypes itemType, int maxLineCount)
         {
             ItemType = itemType;
-            PanelType = panelType;
+            MaxLineCount = maxLineCount;
         }
 
         public StoreItemTypes ItemType { get; }
-        public PanelType PanelType { get; }
+        public int MaxLineCount { get; }
 
         public override string ToString()
         {
-            return $"{nameof(ItemType)}: {ItemType}, {nameof(PanelType)}: {PanelType}";
+            return $"{nameof(ItemType)}: {ItemType}, {nameof(MaxLineCount)}: {MaxLineCount}";
         }
     }
 }

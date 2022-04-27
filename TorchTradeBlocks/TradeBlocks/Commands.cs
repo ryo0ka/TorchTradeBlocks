@@ -2,17 +2,23 @@
 using System.Linq;
 using System.Text;
 using Sandbox.Game.Entities;
+using Sandbox.Game.World;
 using Torch.Commands;
+using Torch.Commands.Permissions;
+using Torch.Mod;
+using Torch.Mod.Messages;
 using TradeBlocks.Core;
 using Utils.General;
 using Utils.Torch;
+using VRage.Game.ModAPI;
 
 namespace TradeBlocks
 {
-    [Category("trades")]
+    [Category("stores")]
     public sealed class Commands : CommandModule
     {
-        [Command("items")]
+        [Command("items_local")]
+        [Permission(MyPromoteLevel.Moderator)]
         public void ShowItems() => this.CatchAndReport(() =>
         {
             var sb = new StringBuilder();
@@ -22,10 +28,11 @@ namespace TradeBlocks
                 sb.AppendLine(storeItem.ToString());
             }
 
-            Context.Respond(sb.ToString());
+            RespondDialog(sb.ToString());
         });
 
-        [Command("items_all")]
+        [Command("items")]
+        [Permission(MyPromoteLevel.None)]
         public void ShowAllItems() => this.CatchAndReport(() =>
         {
             var sb = new StringBuilder();
@@ -35,10 +42,11 @@ namespace TradeBlocks
                 sb.AppendLine(storeItem.ToString());
             }
 
-            Context.Respond(sb.ToString());
+            RespondDialog(sb.ToString());
         });
 
         [Command("stores")]
+        [Permission(MyPromoteLevel.Moderator)]
         public void ShowStoreBlocks() => this.CatchAndReport(() =>
         {
             var counts = new Dictionary<MyCubeGrid, int>();
@@ -54,23 +62,36 @@ namespace TradeBlocks
                 sb.AppendLine($"\"{grid.DisplayName}\": {storeBlockCount}x");
             }
 
-            Context.Respond(sb.ToString());
+            RespondDialog(sb.ToString());
         });
 
         [Command("panels")]
+        [Permission(MyPromoteLevel.Moderator)]
         public void ShowPanels() => this.CatchAndReport(() =>
         {
             var sb = new StringBuilder();
             sb.AppendLine();
             foreach (var panel in TradeBlocksCore.Instance.LocalPanels)
             {
-                if (panel.TryGetPanelParam(out var param))
+                if (panel.PanelParam is { } param)
                 {
                     sb.AppendLine($"\"{panel.Grid.DisplayName}\": {param}");
                 }
             }
 
-            Context.Respond(sb.ToString());
+            RespondDialog(sb.ToString());
         });
+
+        void RespondDialog(string message)
+        {
+            if (Context.Player != null)
+            {
+                var msg = new DialogMessage(MySession.Static.Name, "!stores items", message);
+                ModCommunication.SendMessageTo(msg, Context.Player.SteamUserId);
+                return;
+            }
+
+            Context.Respond(message);
+        }
     }
 }
