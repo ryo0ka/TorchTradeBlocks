@@ -184,6 +184,7 @@
         <Compile Include="TradeBlocks.Core\PanelParam.cs" />
         <Compile Include="TradeBlocks.Core\PanelType.cs" />
         <Compile Include="TradeBlocks.Core\StoreItem.cs" />
+        <Compile Include="TradeBlocks.Core\StoreItemKey.cs" />
         <Compile Include="TradeBlocks.Core\TradeBlocksCore.cs" />
         <Compile Include="TradeBlocks\Commands.cs" />
         <Compile Include="TradeBlocks\Config.cs" />

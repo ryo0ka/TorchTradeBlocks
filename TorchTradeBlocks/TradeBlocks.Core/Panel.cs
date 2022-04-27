@@ -84,7 +84,14 @@ namespace TradeBlocks.Core
 
             foreach (var storeItem in storeItemsView)
             {
-                var line = $"[{storeItem.Faction ?? "---"}] {storeItem.Player} ({storeItem.Region}): {storeItem.Item} {storeItem.Amount}x {storeItem.PricePerUnit}sc";
+                var line = Config.Instance.StoreItemDisplayFormat
+                    .Replace("${faction}", storeItem.Faction ?? "---")
+                    .Replace("${player}", storeItem.Player)
+                    .Replace("${region", storeItem.Region)
+                    .Replace("${item}", storeItem.Item)
+                    .Replace("${price}", storeItem.PricePerUnit.ToString())
+                    .Replace("${amount}", storeItem.Amount.ToString());
+
                 builder.AppendLine(line);
             }
 

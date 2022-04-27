@@ -12,6 +12,14 @@ namespace TradeBlocks
         public static Config Instance { get; set; }
 
         public readonly HashSet<string> ExcludedPlayerSet = new();
+        string _storeItemDisplayFormat = "[${faction}] ${player} (${region}): ${item} ${price}: ${amount}x";
+
+        [XmlElement, Display]
+        public string StoreItemDisplayFormat
+        {
+            get => _storeItemDisplayFormat;
+            set => SetValue(ref _storeItemDisplayFormat, value);
+        }
 
         [XmlElement, Display]
         public List<string> ExcludedPlayers

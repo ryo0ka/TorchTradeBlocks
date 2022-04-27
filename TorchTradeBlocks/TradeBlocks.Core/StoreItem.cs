@@ -26,7 +26,7 @@ namespace TradeBlocks.Core
         public string Item { get; set; }
 
         [ProtoMember(7)]
-        public int Amount { get; set; }
+        public long Amount { get; set; }
 
         [ProtoMember(8)]
         public int PricePerUnit { get; set; }

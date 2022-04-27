@@ -114,46 +114,59 @@ namespace TradeBlocks.Core
         {
             Log.Debug("update economy");
 
+            var serverId = NexusEndpoint.Instance.IsAvailable ? NexusEndpoint.Instance.GetThisServerId() : 0;
+
+            // collect local store items
             _stores.ApplyChanges();
             _localStoreItems.Clear();
+            var storeItems = DictionaryPool<StoreItemKey, long>.Get();
             foreach (var store in _stores)
             {
                 Log.Debug($"store: {store.CubeGrid.DisplayName}");
 
                 if (store.OwnerId == 0) continue; // owned by nobody
                 if (MySession.Static.Players.IdentityIsNpc(store.OwnerId)) continue; // owned by npc
-                var steamId = Sync.Players.TryGetSteamId(store.OwnerId);
-                var playerName = MySession.Static.Players.TryGetIdentityNameFromSteamId(steamId);
-                var faction = MySession.Static.Factions.GetPlayerFaction(store.OwnerId);
                 var region = GetRegion(store.CubeGrid.PositionComp.GetPosition());
-                var serverId = NexusEndpoint.Instance.IsAvailable ? NexusEndpoint.Instance.GetThisServerId() : 0;
                 foreach (var item in store.PlayerItems)
                 {
                     if (item.Item?.SubtypeName is not { } itemStr) continue;
 
-                    var storeItem = new StoreItem
-                    {
-                        ServerID = serverId,
-                        Type = item.StoreItemType,
-                        Faction = faction?.Tag,
-                        Player = playerName,
-                        Region = region,
-                        Item = itemStr,
-                        Amount = item.Amount,
-                        PricePerUnit = item.PricePerUnit,
-                    };
-
-                    _localStoreItems.Add(storeItem);
-                    Log.Trace($"item in store: {storeItem}");
+                    var key = new StoreItemKey(item.StoreItemType, store.OwnerId, region, itemStr, item.PricePerUnit);
+                    var amount = item.Amount;
+                    storeItems.TryGetValue(key, out var amountSum);
+                    storeItems[key] = amountSum + amount;
+                    
+                    Log.Trace($"item in store: {key}, amount: {amount}");
                 }
 
                 Log.Debug($"store done: {store.CubeGrid.DisplayName}");
             }
 
+            foreach (var (key, amount) in storeItems)
+            {
+                var steamId = Sync.Players.TryGetSteamId(key.Player);
+                var playerName = MySession.Static.Players.TryGetIdentityNameFromSteamId(steamId);
+                var faction = MySession.Static.Factions.GetPlayerFaction(key.Player);
+                var storeItem = new StoreItem
+                {
+                    ServerID = serverId,
+                    Type = key.Type,
+                    Faction = faction?.Tag,
+                    Player = playerName,
+                    Region = key.Region,
+                    Item = key.Item,
+                    Amount = amount,
+                    PricePerUnit = key.PricePerUnit,
+                };
+
+                _localStoreItems.Add(storeItem);
+            }
+
+            DictionaryPool<StoreItemKey, long>.Release(storeItems);
+
             // sync stores to all other servers
             if (NexusEndpoint.Instance.IsAvailable)
             {
-                var serverId = NexusEndpoint.Instance.GetThisServerId();
                 var message = SerializeStoreItemList(serverId, _localStoreItems);
                 NexusEndpoint.Instance.SendMessageToAllServers(message);
                 Log.Debug("sent store items to nexus");
