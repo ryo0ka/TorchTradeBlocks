@@ -8,6 +8,7 @@ using Nexus;
 using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using Utils.General;
@@ -114,7 +115,8 @@ namespace TradeBlocks.Core
 
                 if (store.OwnerId == 0) continue; // owned by nobody
                 if (MySession.Static.Players.IdentityIsNpc(store.OwnerId)) continue; // owned by npc
-                if (!MySession.Static.Players.TryGetPlayerById(store.OwnerId, out var player)) continue;
+                var steamId = Sync.Players.TryGetSteamId(store.OwnerId);
+                var playerName = MySession.Static.Players.TryGetIdentityNameFromSteamId(steamId); 
                 var faction = MySession.Static.Factions.GetPlayerFaction(store.OwnerId);
                 var region = GetRegion(store.CubeGrid.PositionComp.GetPosition());
                 var serverId = NexusEndpoint.Instance.IsAvailable ? NexusEndpoint.Instance.GetThisServerId() : 0;
@@ -127,7 +129,7 @@ namespace TradeBlocks.Core
                         ServerID = serverId,
                         Type = item.StoreItemType,
                         Faction = faction?.Tag,
-                        Player = player.DisplayName,
+                        Player = playerName,
                         Region = region,
                         Item = itemStr,
                         Amount = item.Amount,
@@ -135,8 +137,10 @@ namespace TradeBlocks.Core
                     };
 
                     _localStoreItems.Add(storeItem);
-                    Log.Debug($"item in store: {storeItem}");
+                    Log.Trace($"item in store: {storeItem}");
                 }
+                
+                Log.Debug($"store done: {store.CubeGrid.DisplayName}");
             }
 
             // sync stores to all other servers

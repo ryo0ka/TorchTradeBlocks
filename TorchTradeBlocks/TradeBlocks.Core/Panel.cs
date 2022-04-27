@@ -27,12 +27,12 @@ namespace TradeBlocks.Core
 
         public void Update()
         {
-            Log.Debug("panel update");
+            Log.Trace("panel update");
 
             if (_panel.Closed) return;
             if (!TryGetPanelParam(out var param)) return;
 
-            Log.Debug($"params: {param}");
+            Log.Trace($"params: {param}");
 
             var srcStoreItems = TradeBlocksCore.Instance.GetStoreItems();
             if (srcStoreItems.Count == 0) return;
@@ -47,7 +47,7 @@ namespace TradeBlocks.Core
             }
 
             storeItems.Sort(this);
-            Log.Debug($"store items: {storeItems.ToStringSeq()}");
+            Log.Trace($"store items: {storeItems.ToStringSeq()}");
 
             var builder = new StringBuilder();
             builder.AppendLine($"{param.ItemType}:");

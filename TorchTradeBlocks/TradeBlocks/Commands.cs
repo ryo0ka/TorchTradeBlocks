@@ -16,6 +16,7 @@ namespace TradeBlocks
         public void ShowItems() => this.CatchAndReport(() =>
         {
             var sb = new StringBuilder();
+            sb.AppendLine();
             foreach (var storeItem in TradeBlocksCore.Instance.LocalStoreItems)
             {
                 sb.AppendLine(storeItem.ToString());
@@ -28,6 +29,7 @@ namespace TradeBlocks
         public void ShowAllItems() => this.CatchAndReport(() =>
         {
             var sb = new StringBuilder();
+            sb.AppendLine();
             foreach (var storeItem in TradeBlocksCore.Instance.AllStoreItems)
             {
                 sb.AppendLine(storeItem.ToString());
@@ -46,6 +48,7 @@ namespace TradeBlocks
             }
 
             var sb = new StringBuilder();
+            sb.AppendLine();
             foreach (var (grid, storeBlockCount) in counts)
             {
                 sb.AppendLine($"\"{grid.DisplayName}\": {storeBlockCount}x");
@@ -58,6 +61,7 @@ namespace TradeBlocks
         public void ShowPanels() => this.CatchAndReport(() =>
         {
             var sb = new StringBuilder();
+            sb.AppendLine();
             foreach (var panel in TradeBlocksCore.Instance.LocalPanels)
             {
                 if (panel.TryGetPanelParam(out var param))
