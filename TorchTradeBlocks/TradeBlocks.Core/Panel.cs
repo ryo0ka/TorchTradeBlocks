@@ -87,7 +87,7 @@ namespace TradeBlocks.Core
                 var line = Config.Instance.StoreItemDisplayFormat
                     .Replace("${faction}", storeItem.Faction ?? "---")
                     .Replace("${player}", storeItem.Player)
-                    .Replace("${region", storeItem.Region)
+                    .Replace("${region}", storeItem.Region)
                     .Replace("${item}", storeItem.Item)
                     .Replace("${price}", storeItem.PricePerUnit.ToString())
                     .Replace("${amount}", storeItem.Amount.ToString());

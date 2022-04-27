@@ -94,9 +94,9 @@ namespace TradeBlocks.Core
                 UpdateEconomy();
             }
 
-            if (VRageUtils.EveryFrame(5))
+            if (VRageUtils.EveryFrame(1))
             {
-                foreach (var panel in _panels.Throttle(5))
+                foreach (var panel in _panels.Throttle(1))
                 {
                     try
                     {
