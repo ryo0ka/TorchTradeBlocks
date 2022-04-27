@@ -94,7 +94,7 @@ namespace TradeBlocks.Core
                 UpdateEconomy();
             }
 
-            if (VRageUtils.EveryFrame(1))
+            if (VRageUtils.EveryFrame(10))
             {
                 foreach (var panel in _panels.Throttle(1))
                 {
@@ -135,7 +135,7 @@ namespace TradeBlocks.Core
                     var amount = item.Amount;
                     storeItems.TryGetValue(key, out var amountSum);
                     storeItems[key] = amountSum + amount;
-                    
+
                     Log.Trace($"item in store: {key}, amount: {amount}");
                 }
 
@@ -194,6 +194,7 @@ namespace TradeBlocks.Core
         bool Accepts(StoreItem storeItem)
         {
             if (Config.Instance.ExcludedPlayerSet.Contains(storeItem.Player)) return false;
+            if (Config.Instance.ExcludedItemSet.Contains(storeItem.Item)) return false;
             return true;
         }
 

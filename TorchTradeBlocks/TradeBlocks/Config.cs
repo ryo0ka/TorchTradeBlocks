@@ -13,7 +13,12 @@ namespace TradeBlocks
         public const string DefaultLogFilePath = "Logs/TradeBlocks-${shortdate}.log";
         public static Config Instance { get; set; }
 
+        [XmlIgnore]
         public readonly HashSet<string> ExcludedPlayerSet = new();
+
+        [XmlIgnore]
+        public readonly HashSet<string> ExcludedItemSet = new() { "ClangCola", "CosmicCoffee" };
+
         string _storeItemDisplayFormat = "[${faction}] ${player} (${region}): ${item} ${price}: ${amount}x";
         bool _suppressWpfOutput;
         bool _enableLoggingTrace;
@@ -27,7 +32,7 @@ namespace TradeBlocks
             set => SetValue(ref _storeItemDisplayFormat, value);
         }
 
-        [XmlElement, Display]
+        [XmlArray, Display]
         public List<string> ExcludedPlayers
         {
             get => ExcludedPlayerSet.ToList();
@@ -36,6 +41,19 @@ namespace TradeBlocks
                 ExcludedPlayerSet.Clear();
                 ExcludedPlayerSet.UnionWith(value);
                 OnPropertyChanged(nameof(ExcludedPlayers));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
+            }
+        }
+
+        [XmlArray, Display]
+        public List<string> ExcludedItems
+        {
+            get => ExcludedItemSet.ToList();
+            set
+            {
+                ExcludedItemSet.Clear();
+                ExcludedItemSet.UnionWith(value);
+                OnPropertyChanged(nameof(ExcludedItemSet));
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
             }
         }
@@ -66,6 +84,10 @@ namespace TradeBlocks
         {
             get => _logFilePath;
             set => SetValue(ref _logFilePath, value);
+        }
+
+        public void Initialize()
+        {
         }
     }
 }

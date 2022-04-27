@@ -52,6 +52,7 @@ namespace TradeBlocks
             var configPath = this.MakeFilePath($"{nameof(TradeBlocks)}.cfg");
             _config = Persistent<Config>.Load(configPath);
             Config.Instance = _config.Data;
+            Config.Instance.Initialize();
             Config.Instance.PropertyChanged += OnConfigChanged;
 
             _loggingConfigurator.Configure(Config.Instance);
@@ -60,6 +61,7 @@ namespace TradeBlocks
         void OnConfigChanged(object sender, PropertyChangedEventArgs e)
         {
             _loggingConfigurator.Configure(Config.Instance);
+            Log.Info("config changed");
         }
 
         void OnSessionLoaded()
