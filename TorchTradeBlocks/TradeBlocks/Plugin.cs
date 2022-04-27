@@ -14,6 +14,7 @@ namespace TradeBlocks
     public sealed class Plugin : TorchPluginBase, IWpfPlugin
     {
         static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+
         Persistent<Config> _config;
         UserControl _userControl;
         FileLoggingConfigurator _loggingConfigurator;
@@ -52,7 +53,6 @@ namespace TradeBlocks
             var configPath = this.MakeFilePath($"{nameof(TradeBlocks)}.cfg");
             _config = Persistent<Config>.Load(configPath);
             Config.Instance = _config.Data;
-            Config.Instance.Initialize();
             Config.Instance.PropertyChanged += OnConfigChanged;
 
             _loggingConfigurator.Configure(Config.Instance);

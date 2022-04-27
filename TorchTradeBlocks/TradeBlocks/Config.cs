@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Linq;
 using System.Xml.Serialization;
+using NLog;
 using Torch;
 using Torch.Views;
 using Utils.Torch;
@@ -10,6 +11,8 @@ namespace TradeBlocks
 {
     public sealed class Config : ViewModel, FileLoggingConfigurator.IConfig
     {
+        static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+
         public const string DefaultLogFilePath = "Logs/TradeBlocks-${shortdate}.log";
         public static Config Instance { get; set; }
 
@@ -84,10 +87,6 @@ namespace TradeBlocks
         {
             get => _logFilePath;
             set => SetValue(ref _logFilePath, value);
-        }
-
-        public void Initialize()
-        {
         }
     }
 }

@@ -19,6 +19,27 @@ namespace TradeBlocks
     {
         public Plugin Plugin => (Plugin)Context.Plugin;
 
+        [Command("configs")]
+        [Permission(MyPromoteLevel.None)]
+        public void ShowConfigs()
+        {
+            this.GetOrSetProperty(Config.Instance);
+        }
+
+        [Command("commands")]
+        [Permission(MyPromoteLevel.None)]
+        public void ShowCommands()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine();
+            foreach (var (Command, Permission) in CommandModuleUtils.GetCommandMethods(typeof(Commands)))
+            {
+                sb.AppendLine($"{Permission} !{Command.Name} -- {Command.Description}");
+            }
+
+            RespondDialog(sb.ToString());
+        }
+
         [Command("reload")]
         [Permission(MyPromoteLevel.Admin)]
         public void ReloadConfigs()
