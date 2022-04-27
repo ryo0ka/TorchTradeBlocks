@@ -49,7 +49,7 @@ namespace TradeBlocks
                 Config.Instance.PropertyChanged -= OnConfigChanged;
             }
 
-            var configPath = this.MakeConfigFilePath();
+            var configPath = this.MakeFilePath($"{nameof(TradeBlocks)}.cfg");
             _config = Persistent<Config>.Load(configPath);
             Config.Instance = _config.Data;
             Config.Instance.PropertyChanged += OnConfigChanged;
