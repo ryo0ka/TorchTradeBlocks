@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Controls;
 using Nexus;
 using NLog;
@@ -15,6 +16,7 @@ namespace TradeBlocks
         static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         Persistent<Config> _config;
         UserControl _userControl;
+        FileLoggingConfigurator _loggingConfigurator;
         Core.TradeBlocksCore _core;
         bool _passedFirstFrame;
 
@@ -29,6 +31,12 @@ namespace TradeBlocks
             this.OnSessionStateChanged(TorchSessionState.Loaded, OnSessionLoaded);
             this.OnSessionStateChanged(TorchSessionState.Unloading, OnSessionUnloading);
 
+            _loggingConfigurator = new FileLoggingConfigurator(
+                "TradeBlocks",
+                new[] { $"{nameof(TradeBlocks)}.*" },
+                Config.DefaultLogFilePath);
+            _loggingConfigurator.Initialize();
+
             ReloadConfigs();
 
             _core = new Core.TradeBlocksCore();
@@ -36,9 +44,22 @@ namespace TradeBlocks
 
         public void ReloadConfigs()
         {
+            if (Config.Instance != null)
+            {
+                Config.Instance.PropertyChanged -= OnConfigChanged;
+            }
+
             var configPath = this.MakeConfigFilePath();
             _config = Persistent<Config>.Load(configPath);
             Config.Instance = _config.Data;
+            Config.Instance.PropertyChanged += OnConfigChanged;
+
+            _loggingConfigurator.Configure(Config.Instance);
+        }
+
+        void OnConfigChanged(object sender, PropertyChangedEventArgs e)
+        {
+            _loggingConfigurator.Configure(Config.Instance);
         }
 
         void OnSessionLoaded()

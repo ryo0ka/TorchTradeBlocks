@@ -17,6 +17,16 @@ namespace TradeBlocks
     [Category("stores")]
     public sealed class Commands : CommandModule
     {
+        public Plugin Plugin => (Plugin)Context.Plugin;
+
+        [Command("reload")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ReloadConfigs()
+        {
+            Plugin.ReloadConfigs();
+            Context.Respond("reloaded configs");
+        }
+
         [Command("items_local")]
         [Permission(MyPromoteLevel.Moderator)]
         public void ShowItems() => this.CatchAndReport(() =>
