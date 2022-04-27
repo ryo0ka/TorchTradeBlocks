@@ -7,15 +7,15 @@ using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
 using Sandbox.ModAPI.Ingame;
 using Utils.General;
-using VRage.Game.ObjectBuilders.Definitions;
 
 namespace TradeBlocks.Core
 {
     public sealed class Panel : IComparer<StoreItem>
     {
         static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+
         readonly MyTextPanel _panel;
-        PanelParam? _panelParam;
+        PanelParam _panelParam; // can be null
         bool _passedFirstFrame;
 
         public Panel(MyTextPanel panel)
@@ -25,7 +25,7 @@ namespace TradeBlocks.Core
         }
 
         public MyCubeGrid Grid => _panel.CubeGrid;
-        public PanelParam? PanelParam => _panelParam;
+        public PanelParam ParamOrNull => _panelParam;
 
         public void Close()
         {
@@ -35,10 +35,14 @@ namespace TradeBlocks.Core
         void OnCustomDataChanged(MyTerminalBlock _)
         {
             _panelParam = null;
-            if (TryParseCustomData(_panel.CustomData, out var panelParam))
+            if (PanelParam.TryParseCustomData(_panel.CustomData, out var panelParam, out var error))
             {
                 _panelParam = panelParam;
                 Log.Debug($"custom data changed: {_panelParam}");
+            }
+            else if (!string.IsNullOrEmpty(error))
+            {
+                ((IMyTextSurface)_panel).WriteText(error);
             }
         }
 
@@ -61,7 +65,7 @@ namespace TradeBlocks.Core
             var storeItems = ListPool<StoreItem>.Get();
             foreach (var storeItem in allStoreItems)
             {
-                if (storeItem.Type == param.ItemType)
+                if (Accepts(storeItem, param))
                 {
                     storeItems.Add(storeItem);
                 }
@@ -87,6 +91,17 @@ namespace TradeBlocks.Core
             ListPool<StoreItem>.Release(storeItemsView);
 
             ((IMyTextSurface)_panel).WriteText(builder);
+        }
+
+        bool Accepts(StoreItem storeItem, PanelParam param)
+        {
+            //Log.Info($"{param.ExcludedPlayerSet}, {param.IncludedPlayerSet}, {Config.Instance.ExcludedPlayerSet}");
+            
+            if (param.ItemType != storeItem.Type) return false;
+            if (param.IncludedPlayerSet.Count > 0 && !param.IncludedPlayerSet.Contains(storeItem.Player)) return false;
+            if (param.ExcludedPlayerSet.Count > 0 && param.ExcludedPlayerSet.Contains(storeItem.Player)) return false;
+            if (Config.Instance.ExcludedPlayerSet.Contains(storeItem.Player)) return false;
+            return true;
         }
 
         int IComparer<StoreItem>.Compare(StoreItem x, StoreItem y)
@@ -129,32 +144,6 @@ namespace TradeBlocks.Core
                 var j = (i + interval) % src.Count;
                 dst.Add(src[j]);
             }
-        }
-
-        static bool TryParseCustomData(string customData, out PanelParam param)
-        {
-            param = default;
-            if (string.IsNullOrEmpty(customData)) return false;
-            if (!customData.StartsWith("!stores")) return false;
-
-            var command = customData.Split(' ');
-            command.TryGetElementAt(1, out var typeStr);
-            command.TryGetElementAt(2, out var maxLineCountStr);
-
-            var itemType = typeStr switch
-            {
-                "offer" => StoreItemTypes.Offer,
-                "offers" => StoreItemTypes.Offer,
-                "order" => StoreItemTypes.Order,
-                "orders" => StoreItemTypes.Order,
-                _ => StoreItemTypes.Offer,
-            };
-
-            int.TryParse(maxLineCountStr ?? "0", out var maxLineCount);
-
-            param = new PanelParam(itemType, maxLineCount);
-
-            return true;
         }
     }
 }

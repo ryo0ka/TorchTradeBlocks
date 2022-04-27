@@ -98,7 +98,14 @@ namespace TradeBlocks.Core
             {
                 foreach (var panel in _panels.Throttle(5))
                 {
-                    panel.Update();
+                    try
+                    {
+                        panel.Update();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
+                    }
                 }
             }
         }
@@ -116,7 +123,7 @@ namespace TradeBlocks.Core
                 if (store.OwnerId == 0) continue; // owned by nobody
                 if (MySession.Static.Players.IdentityIsNpc(store.OwnerId)) continue; // owned by npc
                 var steamId = Sync.Players.TryGetSteamId(store.OwnerId);
-                var playerName = MySession.Static.Players.TryGetIdentityNameFromSteamId(steamId); 
+                var playerName = MySession.Static.Players.TryGetIdentityNameFromSteamId(steamId);
                 var faction = MySession.Static.Factions.GetPlayerFaction(store.OwnerId);
                 var region = GetRegion(store.CubeGrid.PositionComp.GetPosition());
                 var serverId = NexusEndpoint.Instance.IsAvailable ? NexusEndpoint.Instance.GetThisServerId() : 0;
@@ -139,7 +146,7 @@ namespace TradeBlocks.Core
                     _localStoreItems.Add(storeItem);
                     Log.Trace($"item in store: {storeItem}");
                 }
-                
+
                 Log.Debug($"store done: {store.CubeGrid.DisplayName}");
             }
 

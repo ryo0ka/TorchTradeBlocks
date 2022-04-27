@@ -73,7 +73,7 @@ namespace TradeBlocks
             sb.AppendLine();
             foreach (var panel in TradeBlocksCore.Instance.LocalPanels)
             {
-                if (panel.PanelParam is { } param)
+                if (panel.ParamOrNull is { } param)
                 {
                     sb.AppendLine($"\"{panel.Grid.DisplayName}\": {param}");
                 }
