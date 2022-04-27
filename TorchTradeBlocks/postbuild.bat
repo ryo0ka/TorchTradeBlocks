@@ -1,9 +1,9 @@
 @echo off
 cmd 
 
-set PLUGINS_DIR="C://torch-server/Plugins"
-set TORCH_EXE_PATH="C://torch-server/Torch.Server.exe"
-echo "plugins output path: %PLUGINS_DIR%, exe: %TORCH_EXE_PATH%"
+set PLUGINS_DIRS="C://torches/torch-general/Plugins" "C://torches/torch-earthmoon/Plugins"
+set TORCH_EXE_PATHS="C://torches/torch-general/Torch.Server.exe" "C://torches/torch-earthmoon/Torch.Server.exe"
+echo "plugins output path: %PLUGINS_DIRS%, exe: %TORCH_EXE_PATHS%"
 
 REM Prerequisites:
 REM * This batch file is executed in the build folder;
@@ -26,13 +26,15 @@ TorchPluginPackager ^
     -m %MANIFEST_PATH% ^
     -b %BUILD_DIR% ^
     -r "%SOLUTION_DIR%TorchBinaries" "%SOLUTION_DIR%GameBinaries" ^
-    -o %PLUGINS_DIR% ^
-    -e "InfluxDb.Torch.dll" "InfluxDb.Client.dll" "Profiler.dll"
+    -o %PLUGINS_DIRS% ^
+    -e "Nexus.dll"
 
 REM Restarts the torch app. Comment out below if you don't want it.
 
 taskkill /f /im "Torch.Server.exe" /fi "memusage gt 2"
+taskkill /f /im "Torch.Server.exe" /fi "memusage gt 2"
+taskkill /f /im "Torch.Server.exe" /fi "memusage gt 2"
 
-cmdow /run %TORCH_EXE_PATH%
+for %%p in (%TORCH_EXE_PATHS%) do cmdow /run %%p
 
 echo "done"

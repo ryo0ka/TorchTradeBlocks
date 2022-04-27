@@ -46,14 +46,20 @@
         <Reference Include="PresentationFramework" />
     </ItemGroup>
     <ItemGroup>
+        <Reference Include="ProtoBuf.Net">
+            <HintPath>$(SolutionDir)\GameBinaries\ProtoBuf.Net.dll</HintPath>
+        </Reference>
+        <Reference Include="ProtoBuf.Net.Core">
+            <HintPath>$(SolutionDir)\GameBinaries\ProtoBuf.Net.Core.dll</HintPath>
+        </Reference>
         <Reference Include="NLog">
             <HintPath>$(SolutionDir)\TorchBinaries\NLog.dll</HintPath>
         </Reference>
-        <Reference Include="Newtonsoft.Json, Version=12.0.0.0">
-            <HintPath>..\TorchBinaries\Newtonsoft.Json.dll</HintPath>
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>$(SolutionDir)\TorchBinaries\Newtonsoft.Json.dll</HintPath>
         </Reference>
-        <Reference Include="System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-            <HintPath>..\GameBinaries\System.Net.Http.dll</HintPath>
+        <Reference Include="System.Net.Http">
+            <HintPath>$(SolutionDir)\GameBinaries\System.Net.Http.dll</HintPath>
         </Reference>
         <Reference Include="Torch">
             <HintPath>$(SolutionDir)\TorchBinaries\Torch.dll</HintPath>
@@ -151,11 +157,17 @@
         <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers">
             <HintPath>$(SolutionDir)\GameBinaries\SpaceEngineers.ObjectBuilders.XmlSerializers.dll</HintPath>
         </Reference>
-        <Reference Include="HavokWrapper, Version=0.1.1.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>..\GameBinaries\HavokWrapper.dll</HintPath>
+        <Reference Include="HavokWrapper">
+            <HintPath>$(SolutionDir)\GameBinaries\HavokWrapper.dll</HintPath>
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Reference Include="Nexus">
+            <HintPath>..\external\Nexus.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Nexus\NexusEndpoint.cs" />
         <Compile Include="Properties\AssemblyInfo.cs">
             <SubType>Code</SubType>
         </Compile>
@@ -168,7 +180,8 @@
         <Compile Include="TradeBlocks.Core\PanelParam.cs" />
         <Compile Include="TradeBlocks.Core\PanelType.cs" />
         <Compile Include="TradeBlocks.Core\StoreItem.cs" />
-        <Compile Include="TradeBlocks.Core\Core.cs" />
+        <Compile Include="TradeBlocks.Core\TradeBlocksCore.cs" />
+        <Compile Include="TradeBlocks\Commands.cs" />
         <Compile Include="TradeBlocks\Plugin.cs" />
         <EmbeddedResource Include="Properties\Resources.resx">
             <Generator>ResXFileCodeGenerator</Generator>
@@ -176,7 +189,8 @@
         </EmbeddedResource>
     </ItemGroup>
     <ItemGroup>
-      <Content Include="manifest.xml" />
+        <Content Include="manifest.xml" />
+        <Content Include="postbuild.bat" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Import Project="..\TorchUtils\Utils.General\Utils.General.projitems" Label="Shared" />

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using NLog;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
 using Sandbox.ModAPI.Ingame;
 using Utils.General;
@@ -18,6 +19,8 @@ namespace TradeBlocks.Core
             _panel = panel;
         }
 
+        public MyCubeGrid Grid => _panel.CubeGrid;
+
         public void Close()
         {
         }
@@ -27,19 +30,28 @@ namespace TradeBlocks.Core
             Log.Debug("panel update");
 
             if (_panel.Closed) return;
-            if (!TryParseCustomData(_panel.CustomData, out var param)) return;
+            if (!TryGetPanelParam(out var param)) return;
 
             Log.Debug($"params: {param}");
 
-            var srcStoreItems = Core.Instance.GetStoreItems(param.ItemType);
+            var srcStoreItems = TradeBlocksCore.Instance.GetStoreItems();
             if (srcStoreItems.Count == 0) return;
 
             var storeItems = ListPool<StoreItem>.Get();
-            storeItems.AddRange(srcStoreItems);
+            foreach (var storeItem in srcStoreItems)
+            {
+                if (storeItem.Type == param.ItemType)
+                {
+                    storeItems.Add(storeItem);
+                }
+            }
+
             storeItems.Sort(this);
             Log.Debug($"store items: {storeItems.ToStringSeq()}");
 
             var builder = new StringBuilder();
+            builder.AppendLine($"{param.ItemType}:");
+
             foreach (var storeItem in storeItems)
             {
                 var line = $"[{storeItem.Faction ?? "---"}] {storeItem.Player} ({storeItem.Region}): {storeItem.Item} {storeItem.Amount}x {storeItem.PricePerUnit}sc";
@@ -49,6 +61,11 @@ namespace TradeBlocks.Core
             ListPool<StoreItem>.Release(storeItems);
 
             ((IMyTextSurface)_panel).WriteText(builder);
+        }
+
+        public bool TryGetPanelParam(out PanelParam panelParam)
+        {
+            return TryParseCustomData(_panel.CustomData, out panelParam);
         }
 
         int IComparer<StoreItem>.Compare(StoreItem x, StoreItem y)
