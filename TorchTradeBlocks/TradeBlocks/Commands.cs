@@ -34,7 +34,7 @@ namespace TradeBlocks
             sb.AppendLine();
             foreach (var (Command, Permission) in CommandModuleUtils.GetCommandMethods(typeof(Commands)))
             {
-                sb.AppendLine($"{Permission} !{Command.Name} -- {Command.Description}");
+                sb.AppendLine($"!stores {Command.Name} -- [{Permission}] {Command.Description}");
             }
 
             RespondDialog(sb.ToString());
@@ -47,20 +47,6 @@ namespace TradeBlocks
             Plugin.ReloadConfigs();
             Context.Respond("reloaded configs");
         }
-
-        [Command("items_local")]
-        [Permission(MyPromoteLevel.Moderator)]
-        public void ShowItems() => this.CatchAndReport(() =>
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine();
-            foreach (var storeItem in TradeBlocksCore.Instance.LocalStoreItems)
-            {
-                sb.AppendLine(storeItem.ToString());
-            }
-
-            RespondDialog(sb.ToString());
-        });
 
         [Command("items")]
         [Permission(MyPromoteLevel.None)]
@@ -81,7 +67,7 @@ namespace TradeBlocks
         public void ShowStoreBlocks() => this.CatchAndReport(() =>
         {
             var counts = new Dictionary<MyCubeGrid, int>();
-            foreach (var storeBlock in TradeBlocksCore.Instance.LocalStoreBlocks)
+            foreach (var storeBlock in TradeBlocksCore.Instance.AllStoreBlocks)
             {
                 counts.Increment(storeBlock.CubeGrid);
             }
@@ -102,7 +88,7 @@ namespace TradeBlocks
         {
             var sb = new StringBuilder();
             sb.AppendLine();
-            foreach (var panel in TradeBlocksCore.Instance.LocalPanels)
+            foreach (var panel in TradeBlocksCore.Instance.AllPanels)
             {
                 if (panel.ParamOrNull is { } param)
                 {

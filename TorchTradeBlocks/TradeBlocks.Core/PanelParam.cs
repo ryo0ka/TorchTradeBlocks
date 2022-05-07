@@ -15,6 +15,9 @@ namespace TradeBlocks.Core
         [Option('l', "lines")]
         public int MaxLineCount { get; set; }
 
+        [Option('d', "debug")]
+        public bool Debug { get; set; }
+
         [Option('i', "included")]
         public IEnumerable<string> IncludedPlayers { get; set; }
 
@@ -48,7 +51,7 @@ namespace TradeBlocks.Core
 
         public override string ToString()
         {
-            return $"{nameof(ItemType)}: {ItemType}, {nameof(MaxLineCount)}: {MaxLineCount}";
+            return $"{nameof(ItemType)}: {ItemType}, {nameof(MaxLineCount)}: {MaxLineCount}, {nameof(Debug)}: {Debug}, {nameof(IncludedPlayers)}: {IncludedPlayers}, {nameof(ExcludedPlayers)}: {ExcludedPlayers}, {nameof(IncludedPlayerSet)}: {IncludedPlayerSet}, {nameof(ExcludedPlayerSet)}: {ExcludedPlayerSet}";
         }
     }
 }

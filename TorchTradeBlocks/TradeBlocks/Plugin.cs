@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Controls;
-using Nexus;
 using NLog;
 using Torch;
 using Torch.API;
@@ -19,7 +18,6 @@ namespace TradeBlocks
         UserControl _userControl;
         FileLoggingConfigurator _loggingConfigurator;
         Core.TradeBlocksCore _core;
-        bool _passedFirstFrame;
 
         UserControl IWpfPlugin.GetControl()
         {
@@ -70,20 +68,12 @@ namespace TradeBlocks
 
         public override void Update()
         {
-            if (!_passedFirstFrame)
-            {
-                _passedFirstFrame = true;
-                var modId = (ushort)nameof(TorchTradeBlocks).GetHashCode();
-                NexusEndpoint.Instance.TryInitialize(Torch, modId);
-            }
-
             _core.Update();
         }
 
         void OnSessionUnloading()
         {
             _core?.Close();
-            NexusEndpoint.Instance.Close();
         }
     }
 }

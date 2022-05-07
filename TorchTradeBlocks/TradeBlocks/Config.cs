@@ -27,12 +27,20 @@ namespace TradeBlocks
         bool _enableLoggingTrace;
         bool _enableLoggingDebug;
         string _logFilePath = DefaultLogFilePath;
+        string _footer = "This panel reflects every player-made\nstore block in the world";
 
         [XmlElement, Display]
         public string StoreItemDisplayFormat
         {
             get => _storeItemDisplayFormat;
             set => SetValue(ref _storeItemDisplayFormat, value);
+        }
+
+        [XmlElement, Display]
+        public string Footer
+        {
+            get => _footer;
+            set => SetValue(ref _footer, value);
         }
 
         [XmlArray, Display]

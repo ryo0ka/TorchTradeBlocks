@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using DefaultNamespace;
 using HNZ.Utils;
-using Nexus;
 using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
@@ -26,9 +24,7 @@ namespace TradeBlocks.Core
         readonly CubeBlockAddRemoveObserver<MyTextPanel> _panelObserver;
         readonly CubeBlockMappingCollection<MyTextPanel, Panel> _panels;
         readonly CubeBlockAddRemoveObserver<MyStoreBlock> _storeObserver;
-        readonly SceneEntityCachingSet<MyStoreBlock> _stores;
-        readonly List<StoreItem> _localStoreItems;
-        readonly Dictionary<int, List<StoreItem>> _remoteStoreItems;
+        readonly SceneEntityCachingSet<MyStoreBlock> _allStores;
         readonly List<StoreItem> _allStoreItems;
 
         public TradeBlocksCore()
@@ -38,18 +34,13 @@ namespace TradeBlocks.Core
             _panelObserver = new CubeBlockAddRemoveObserver<MyTextPanel>();
             _panels = new CubeBlockMappingCollection<MyTextPanel, Panel>(_panelObserver, e => new Panel(e));
             _storeObserver = new CubeBlockAddRemoveObserver<MyStoreBlock>();
-            _stores = new SceneEntityCachingSet<MyStoreBlock>(_storeObserver);
-            _localStoreItems = new List<StoreItem>();
-            _remoteStoreItems = new Dictionary<int, List<StoreItem>>();
+            _allStores = new SceneEntityCachingSet<MyStoreBlock>(_storeObserver);
             _allStoreItems = new List<StoreItem>();
-
-            NexusEndpoint.Instance.OnMessageReceived += OnMessageReceived;
         }
 
-        public IReadOnlyList<StoreItem> LocalStoreItems => _localStoreItems;
         public IReadOnlyList<StoreItem> AllStoreItems => _allStoreItems;
-        public IEnumerable<MyStoreBlock> LocalStoreBlocks => _stores;
-        public IEnumerable<Panel> LocalPanels => _panels.GetAll();
+        public IEnumerable<MyStoreBlock> AllStoreBlocks => _allStores;
+        public IEnumerable<Panel> AllPanels => _panels.GetAll();
 
         public void Close()
         {
@@ -63,28 +54,7 @@ namespace TradeBlocks.Core
             _panels.Close();
 
             _storeObserver.Close();
-            _stores.Clear();
-
-            NexusEndpoint.Instance.OnMessageReceived -= OnMessageReceived;
-        }
-
-        void OnMessageReceived(byte[] message)
-        {
-            var storeItems = ListPool<StoreItem>.Get();
-            DeserializeStoreItemList(message, out var serverId, storeItems);
-
-            Log.Debug("received items from nexus");
-
-            if (!_remoteStoreItems.ContainsKey(serverId))
-            {
-                _remoteStoreItems[serverId] = storeItems;
-                return;
-            }
-
-            _remoteStoreItems[serverId].Clear();
-            _remoteStoreItems[serverId].AddRange(storeItems);
-
-            Log.Debug($"store items received: {serverId}");
+            _allStores.Clear();
         }
 
         public void Update()
@@ -94,9 +64,13 @@ namespace TradeBlocks.Core
                 UpdateEconomy();
             }
 
-            if (VRageUtils.EveryFrame(10))
+            const float minUpdateFrequency = 5f;
+            var count = _panels.Count / (minUpdateFrequency * 60);
+            var frame = count >= 1 ? 1 : (int)(1 / count);
+            if (VRageUtils.EveryFrame(frame))
             {
-                foreach (var panel in _panels.Throttle(1))
+                var c = count >= 1 ? (int)count : 1;
+                foreach (var panel in _panels.Throttle(c))
                 {
                     try
                     {
@@ -114,13 +88,11 @@ namespace TradeBlocks.Core
         {
             Log.Debug("update economy");
 
-            var serverId = NexusEndpoint.Instance.IsAvailable ? NexusEndpoint.Instance.GetThisServerId() : 0;
-
             // collect local store items
-            _stores.ApplyChanges();
-            _localStoreItems.Clear();
+            _allStoreItems.Clear();
+            _allStores.ApplyChanges();
             var storeItems = DictionaryPool<StoreItemKey, long>.Get();
-            foreach (var store in _stores)
+            foreach (var store in _allStores)
             {
                 Log.Debug($"store: {store.CubeGrid.DisplayName}");
 
@@ -149,7 +121,6 @@ namespace TradeBlocks.Core
                 var faction = MySession.Static.Factions.GetPlayerFaction(key.Player);
                 var storeItem = new StoreItem
                 {
-                    ServerID = serverId,
                     Type = key.Type,
                     Faction = faction?.Tag,
                     Player = playerName,
@@ -159,36 +130,13 @@ namespace TradeBlocks.Core
                     PricePerUnit = key.PricePerUnit,
                 };
 
-                _localStoreItems.Add(storeItem);
+                if (Accepts(storeItem))
+                {
+                    _allStoreItems.Add(storeItem);
+                }
             }
 
             DictionaryPool<StoreItemKey, long>.Release(storeItems);
-
-            // sync stores to all other servers
-            if (NexusEndpoint.Instance.IsAvailable)
-            {
-                var message = SerializeStoreItemList(serverId, _localStoreItems);
-                NexusEndpoint.Instance.SendMessageToAllServers(message);
-                Log.Debug("sent store items to nexus");
-            }
-
-            _allStoreItems.Clear();
-            foreach (var storeItem in _localStoreItems)
-            {
-                if (Accepts(storeItem))
-                {
-                    _allStoreItems.Add(storeItem);
-                }
-            }
-
-            foreach (var (_, remoteStoreItems) in _remoteStoreItems)
-            foreach (var storeItem in remoteStoreItems)
-            {
-                if (Accepts(storeItem))
-                {
-                    _allStoreItems.Add(storeItem);
-                }
-            }
         }
 
         bool Accepts(StoreItem storeItem)
@@ -212,35 +160,6 @@ namespace TradeBlocks.Core
             if (gravity.Length() > 0) return planet.Name ?? "noname";
 
             return "Space";
-        }
-
-        static byte[] SerializeStoreItemList(int serverId, IReadOnlyList<StoreItem> storeItems)
-        {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter(stream);
-
-            writer.Write(serverId);
-            writer.Write(storeItems.Count);
-            foreach (var storeItem in storeItems)
-            {
-                writer.WriteProtobuf(storeItem);
-            }
-
-            return stream.ToArray();
-        }
-
-        static void DeserializeStoreItemList(byte[] message, out int serverId, ICollection<StoreItem> storeItems)
-        {
-            using var stream = new MemoryStream(message);
-            using var reader = new BinaryReader(stream);
-
-            serverId = reader.ReadInt32();
-            var length = reader.ReadInt32();
-            for (var i = 0; i < length; i++)
-            {
-                var storeItem = reader.ReadProtobuf<StoreItem>();
-                storeItems.Add(storeItem);
-            }
         }
     }
 }

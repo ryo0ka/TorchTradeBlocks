@@ -7,9 +7,6 @@ namespace TradeBlocks.Core
     [ProtoContract]
     public sealed class StoreItem
     {
-        [ProtoMember(1)]
-        public int ServerID { get; set; }
-
         [ProtoMember(2)]
         public StoreItemTypes Type { get; set; }
 
@@ -33,8 +30,7 @@ namespace TradeBlocks.Core
 
         bool Equals(StoreItem other)
         {
-            return ServerID == other.ServerID &&
-                   Type == other.Type &&
+            return Type == other.Type &&
                    Faction == other.Faction &&
                    Player == other.Player &&
                    Region == other.Region &&
@@ -52,8 +48,7 @@ namespace TradeBlocks.Core
         {
             unchecked
             {
-                var hashCode = ServerID;
-                hashCode = (hashCode * 397) ^ (int)Type;
+                var hashCode = (int)Type;
                 hashCode = (hashCode * 397) ^ (Faction != null ? Faction.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Player != null ? Player.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Region != null ? Region.GetHashCode() : 0);
@@ -66,7 +61,7 @@ namespace TradeBlocks.Core
 
         public override string ToString()
         {
-            return $"{nameof(ServerID)}: {ServerID}, {nameof(Type)}: {Type}, {nameof(Faction)}: {Faction}, {nameof(Player)}: {Player}, {nameof(Region)}: {Region}, {nameof(Item)}: {Item}, {nameof(Amount)}: {Amount}, {nameof(PricePerUnit)}: {PricePerUnit}";
+            return $"{nameof(Type)}: {Type}, {nameof(Faction)}: {Faction}, {nameof(Player)}: {Player}, {nameof(Region)}: {Region}, {nameof(Item)}: {Item}, {nameof(Amount)}: {Amount}, {nameof(PricePerUnit)}: {PricePerUnit}";
         }
     }
 }

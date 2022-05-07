@@ -171,7 +171,6 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Nexus\NexusEndpoint.cs" />
         <Compile Include="Properties\AssemblyInfo.cs">
             <SubType>Code</SubType>
         </Compile>

@@ -17,6 +17,7 @@ namespace TradeBlocks.Core
         readonly MyTextPanel _panel;
         PanelParam _panelParam; // can be null
         bool _passedFirstFrame;
+        int _updateCount;
 
         public Panel(MyTextPanel panel)
         {
@@ -48,6 +49,8 @@ namespace TradeBlocks.Core
 
         public void Update()
         {
+            _updateCount += 1;
+
             if (_panel.Closed) return;
 
             if (!_passedFirstFrame)
@@ -60,8 +63,6 @@ namespace TradeBlocks.Core
             Log.Trace("panel update");
 
             var allStoreItems = TradeBlocksCore.Instance.GetStoreItems();
-            if (allStoreItems.Count == 0) return;
-
             var storeItems = ListPool<StoreItem>.Get();
             foreach (var storeItem in allStoreItems)
             {
@@ -96,6 +97,14 @@ namespace TradeBlocks.Core
             }
 
             ListPool<StoreItem>.Release(storeItemsView);
+
+            builder.AppendLine();
+            builder.AppendLine(Config.Instance.Footer);
+
+            if (param.Debug)
+            {
+                builder.AppendLine($"debug: {_updateCount}");
+            }
 
             ((IMyTextSurface)_panel).WriteText(builder);
         }
