@@ -7,6 +7,7 @@ using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
 using Sandbox.ModAPI.Ingame;
 using Utils.General;
+using VRage.Game.ObjectBuilders.Definitions;
 
 namespace TradeBlocks.Core
 {
@@ -81,7 +82,15 @@ namespace TradeBlocks.Core
             ListPool<StoreItem>.Release(storeItems);
 
             var builder = new StringBuilder();
-            builder.AppendLine($"{param.ItemType}:");
+
+            var itemTypeStr = param.ItemType switch
+            {
+                StoreItemTypes.Offer => "Offers (Selling)",
+                StoreItemTypes.Order => "Orders (Buying)",
+                _ => "<unknown>",
+            };
+
+            builder.AppendLine($"{itemTypeStr}:");
 
             foreach (var storeItem in storeItemsView)
             {

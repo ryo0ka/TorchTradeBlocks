@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.Game.World;
 using Torch.Commands;
@@ -38,6 +39,13 @@ namespace TradeBlocks
             }
 
             RespondDialog(sb.ToString());
+        }
+
+        [Command("help")]
+        [Permission(MyPromoteLevel.None)]
+        public void Help()
+        {
+            this.ShowUrl("https://github.com/HnZGaming/Gaalsien/wiki/Economy");
         }
 
         [Command("reload")]
